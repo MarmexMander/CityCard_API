@@ -1,0 +1,6 @@
+@CityCard_API_HostAddress = http://localhost:5105
+
+GET {{CityCard_API_HostAddress}}/login/
+Accept: application/json
+
+###
