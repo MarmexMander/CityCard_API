@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
 RUN apt-get update -yq && apt-get upgrade -yq
 WORKDIR /app
 EXPOSE 8080

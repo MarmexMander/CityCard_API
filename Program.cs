@@ -12,7 +12,14 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddHostedService<TokenCleanupService>();
-
+builder.Services.AddDbContext<CityCardDBContext>(b =>
+{
+    string user = Environment.GetEnvironmentVariable("POSTGRES_USER");
+    string pwd = Environment.GetEnvironmentVariable("POSTGRES_PASSWORD");
+    string db = Environment.GetEnvironmentVariable("POSTGRES_DB");
+    b.UseNpgsql($"Server=db;Port=5432;Database={db};User Id={user};Password={pwd};");
+});
+builder.Services.AddDefaultIdentity<CCUser>().AddEntityFrameworkStores<CityCardDBContext>().AddDefaultTokenProviders();
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -20,12 +27,13 @@ builder.Services.AddAuthentication(options =>
     options.AddScheme<TerminalTokenAuthenticationHandler>("TerminalToken", "Terminal Token");
 });
 
+
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("TerminalPolicy", policy =>
         policy.RequireAuthenticatedUser().AddAuthenticationSchemes("TerminalToken"));
 });
-builder.Services.AddDefaultIdentity<CCUser>().AddEntityFrameworkStores<CityCardDBContext>().AddRoles<IdentityRole>();
+
 
 
 var app = builder.Build();
