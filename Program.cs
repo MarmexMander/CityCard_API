@@ -4,13 +4,23 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using CityCard_API.Models.DB;
 using CityCard_API.Services;
+using System.Reflection;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>{
+    // c.EnableAnnotations();
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "CityCard API", Version = "v1.3" });
+    var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    c.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
+});
 builder.Services.AddHostedService<TokenCleanupService>();
 builder.Services.AddDbContext<CityCardDBContext>(b =>
 {
@@ -25,6 +35,18 @@ builder.Services.AddAuthentication(options =>
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
     options.AddScheme<TerminalTokenAuthenticationHandler>("TerminalToken", "Terminal Token");
+})
+.AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
+{
+    options.RequireHttpsMetadata = false;
+    options.SaveToken = true;
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("your-secret-key")),
+        ValidateIssuer = false,
+        ValidateAudience = false
+    };
 });
 
 
@@ -39,14 +61,16 @@ builder.Services.AddAuthorization(options =>
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
+// if (app.Environment.IsDevelopment())
+// {
     app.UseSwagger();
     app.UseSwaggerUI();
-}
+// }
 
 app.UseHttpsRedirection();
 app.UseRouting();
+app.UseAuthorization();
+app.UseAuthentication();
 app.MapIdentityApi<CCUser>().WithOpenApi();
 app.MapSwagger().RequireAuthorization("Admin");
 app.MapControllers();
