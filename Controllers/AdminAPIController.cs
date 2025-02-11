@@ -1,6 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 using CityCard_API.Models.DB;
+using CityCard_API.Security;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,12 +10,32 @@ namespace CityCard_API.Controllers;
 
 [ApiController]
 [Route("api/admin/{action}")]
-[Authorize(Roles = "Admin")]
+[Authorize(Policy = "AdminToken")]
 class AdminAPIController : ControllerBase
 {
     private readonly CityCardDBContext _dbContext;
-    public AdminAPIController(CityCardDBContext dBContext){
+    private readonly UserManager<CCUser> _userManager;
+    public AdminAPIController(CityCardDBContext dBContext, UserManager<CCUser> userManager){
         _dbContext = dBContext;
+        _userManager = userManager;
+    }
+
+    [HttpPost]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> GetToken(){
+        var user = await _userManager.GetUserAsync(User);
+        var adminToken = await _dbContext.AdminTokens.Where(at => at.AdminId == user.Id).FirstAsync();
+        if(adminToken != null)
+            return Conflict("You already have a token");
+        var token = Tools.GenerateToken();
+        adminToken = new(){
+            AdminId = user.Id,
+            TokenHash = Tools.ComputeHash(token),
+            CreatedAt = DateTime.UtcNow,
+            ExpiresAt = DateTime.UtcNow+new TimeSpan(30,0,0,0)
+        };
+        await _dbContext.AdminTokens.AddAsync(adminToken);
+        return Ok(token);
     }
 
     [HttpPost]
@@ -129,8 +151,8 @@ class AdminAPIController : ControllerBase
         if (terminal == null)
             return NotFound("Terminal not found");
 
-        var rawToken = Guid.NewGuid().ToString();
-        var tokenHash = ComputeHash(rawToken);
+        var rawToken = Tools.GenerateToken();
+        var tokenHash = Tools.ComputeHash(rawToken);
 
         var newToken = new TerminalToken
         {

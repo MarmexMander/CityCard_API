@@ -35,6 +35,7 @@ builder.Services.AddAuthentication(options =>
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
     options.AddScheme<TerminalTokenAuthenticationHandler>("TerminalToken", "Terminal Token");
+    options.AddScheme<AdminTokenAuthenticationHandler>("AdminToken", "Admin Token");
 })
 .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
 {

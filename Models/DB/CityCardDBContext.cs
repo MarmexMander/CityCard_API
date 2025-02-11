@@ -17,6 +17,7 @@ public class CityCardDBContext : IdentityDbContext
     public DbSet<Transport> Transports { get; set; }
     public DbSet<Terminal> Terminals { get; set; }
     public DbSet<TerminalToken> TerminalTokens { get; set; }
+     public DbSet<AdminToken> AdminTokens { get; set; }
 
     public CityCardDBContext(DbContextOptions<CityCardDBContext> options)
     :base(options)
@@ -47,6 +48,10 @@ public class CityCardDBContext : IdentityDbContext
         var tMetadata = builder.Entity<TransactionMetadata>();
         tMetadata.HasOne(t => t.Terminal).WithMany();
         tMetadata.HasOne(t => t.PriceUsed).WithMany();
+        builder.Entity<AdminToken>()
+            .HasOne(t => t.Admin)
+            .WithMany()
+            .HasForeignKey(t => t.AdminId);
         //Enums seeding
         builder.Entity<AccountType>().SeedEnumValues<AccountType, AccountTypeEnum>(x => x);
         builder.Entity<TransportType>().SeedEnumValues<TransportType, TransportTypeEnum>(x => x);

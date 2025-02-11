@@ -34,7 +34,7 @@ public class TerminalTokenAuthenticationHandler : AuthenticationHandler<Authenti
         string token = authData[1];
 
         // Validate the token
-        var tokenHash = ComputeHash(token); // Hashing logic here
+        var tokenHash = Tools.ComputeHash(token); // Hashing logic here
         var terminalToken = await _dbContext.TerminalTokens
         .Where(t =>
              t.Terminal.Id.ToString() == TerminalId 
@@ -58,12 +58,5 @@ public class TerminalTokenAuthenticationHandler : AuthenticationHandler<Authenti
         var ticket = new AuthenticationTicket(principal, Scheme.Name);
 
         return AuthenticateResult.Success(ticket);
-    }
-
-    private string ComputeHash(string token)
-    {
-        using var sha256 = System.Security.Cryptography.SHA256.Create();
-        var hashed = sha256.ComputeHash(System.Text.Encoding.UTF8.GetBytes(token));
-        return Convert.ToBase64String(hashed);
     }
 }
