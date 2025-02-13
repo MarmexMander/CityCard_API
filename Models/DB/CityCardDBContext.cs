@@ -57,39 +57,39 @@ public class CityCardDBContext : IdentityDbContext
         builder.Entity<TransportType>().SeedEnumValues<TransportType, TransportTypeEnum>(x => x);
 
         //Seeding
-        var adminRole = new IdentityRole(){
-            Id = "ef6451c0-e923-4935-81d0-bdefdcb1716a",
+        var adminRole = new CCRole(){
+            Id = "87d24e3b-489d-e621-9123-c808f97722b9",
             Name = "Admin",
-            ConcurrencyStamp = "ef6451c0-e923-4935-81d0-bdefdcb1716a"
+            ConcurrencyStamp = "87d24e3b-489d-e621-9123-c808f97722b9"
         };
-        var userRole = new IdentityRole(){
-            Id = "1a0cf39b-43ec-49a9-8a29-68775014c2e9",
+        var userRole = new CCRole(){
+            Id = "b35d45df-1693-464c-9086-17c11d02de05",
             Name = "User",
-            ConcurrencyStamp = "1a0cf39b-43ec-49a9-8a29-68775014c2e9"
+            ConcurrencyStamp = "b35d45df-1693-464c-9086-17c11d02de05"
         };
 
-        var roles = new List<IdentityRole>(){
+        var roles = new List<CCRole>(){
             adminRole, 
             userRole
         };
-        builder.Entity<IdentityRole>().HasData(roles);
+        builder.Entity<CCRole>().HasData(roles);
         var hasher = new PasswordHasher<IdentityUser>();
         var adminUser = new IdentityUser(){
-            Id = "cd8a6fd5-8ca8-490d-83a9-127580133ef1",
-            SecurityStamp = "cd8a6fd5-8ca8-490d-83a9-127580133ef1",
-            ConcurrencyStamp = "cd8a6fd5-8ca8-490d-83a9-127580133ef1",
+            Id = "d1cdc3fb-4bc1-434d-85a6-e366a0cb7664",
+            SecurityStamp = "d1cdc3fb-4bc1-434d-85a6-e366a0cb7664",
+            ConcurrencyStamp = "d1cdc3fb-4bc1-434d-85a6-e366a0cb7664",
             UserName = "admin",
             Email = "admin@citycard.ua",
             EmailConfirmed = true,
         };
         adminUser.PasswordHash = "AQAAAAIAAYagAAAAEIlZJu/0K1lq+uZqp2F0JMTkhm2GJV8YCgUUTyOQzA4LFarHrgIbSd6m+WA0HuffEQ==";
-        builder.Entity<IdentityUser>().HasData(adminUser);
+        builder.Entity<CCUser>().HasData(adminUser);
 
         builder.Entity<IdentityUserRole<string>>()
         .HasData(
             new IdentityUserRole<string>{
                 UserId = adminUser.Id,
-                RoleId = roles.First(r=>r.Name == "Admin").Id
+                RoleId = adminRole.Id
             }
         );
 

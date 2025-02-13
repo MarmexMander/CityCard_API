@@ -9,6 +9,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.OpenApi.Models;
 
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -21,6 +22,7 @@ builder.Services.AddSwaggerGen(c =>{
     var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
     c.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
 });
+builder.Services.AddRazorPages();
 builder.Services.AddHostedService<TokenCleanupService>();
 builder.Services.AddDbContext<CityCardDBContext>(b =>
 {
@@ -29,7 +31,28 @@ builder.Services.AddDbContext<CityCardDBContext>(b =>
     string db = Environment.GetEnvironmentVariable("POSTGRES_DB");
     b.UseNpgsql($"Server=db;Port=5432;Database={db};User Id={user};Password={pwd};");
 });
-builder.Services.AddDefaultIdentity<CCUser>().AddEntityFrameworkStores<CityCardDBContext>().AddDefaultTokenProviders();
+
+// builder.Services.AddIdentityApiEndpoints<CCUser>()
+// .AddEntityFrameworkStores<CityCardDBContext>().AddApiEndpoints();
+
+builder.Services
+    .AddIdentity<CCUser, CCRole>(options =>
+        {
+            options.User.RequireUniqueEmail = false;
+        })
+    .AddEntityFrameworkStores<CityCardDBContext>()
+    .AddSignInManager()
+    .AddDefaultUI();
+
+// builder.Services
+//     .AddDefaultIdentity<CCUser>(options =>
+//     {
+//         options.User.RequireUniqueEmail = false;
+//     })
+//     .AddEntityFrameworkStores<CityCardDBContext>()
+//     .AddDefaultTokenProviders();
+
+
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -49,7 +72,6 @@ builder.Services.AddAuthentication(options =>
         ValidateAudience = false
     };
 });
-
 
 builder.Services.AddAuthorization(options =>
 {
@@ -75,7 +97,7 @@ app.UseAuthentication();
 app.MapIdentityApi<CCUser>().WithOpenApi();
 app.MapSwagger().RequireAuthorization("Admin");
 app.MapControllers();
-
+app.MapRazorPages();
 // app.MapAreaControllerRoute("User", "User", "User/{controller=Api}/{action}").RequireAuthorization();
 // app.MapAreaControllerRoute("Admin", "Admin", "Admin/{controller=Api}/{action}").RequireAuthorization("Admin");
 // app.MapAreaControllerRoute("Terminal", "Terminal", "Terminal/{controller=Api}/{action}").RequireAuthorization(policy: "TerminalPolicy");
