@@ -8,6 +8,7 @@ using System.Reflection;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.OpenApi.Models;
+using Microsoft.AspNetCore.Authentication.Cookies;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -36,12 +37,19 @@ builder.Services.AddDbContext<CityCardDBContext>(b =>
 // .AddEntityFrameworkStores<CityCardDBContext>().AddApiEndpoints();
 
 builder.Services
-    .AddIdentity<CCUser, CCRole>(options =>
+    .AddIdentityCore<CCUser>(options =>
         {
-            options.User.RequireUniqueEmail = false;
+            options.SignIn.RequireConfirmedEmail = false;
+            options.Password.RequireDigit = false;
+            options.Password.RequireLowercase = false;
+            options.Password.RequireUppercase = false;
+            options.Password.RequireNonAlphanumeric = false;
+            options.Password.RequiredLength = 5;
         })
     .AddEntityFrameworkStores<CityCardDBContext>()
+    .AddApiEndpoints()
     .AddSignInManager()
+    .AddDefaultTokenProviders()
     .AddDefaultUI();
 
 // builder.Services
@@ -55,47 +63,63 @@ builder.Services
 
 builder.Services.AddAuthentication(options =>
 {
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultAuthenticateScheme = IdentityConstants.ApplicationScheme;
+    options.DefaultSignInScheme = IdentityConstants.ApplicationScheme;
+    
     options.AddScheme<TerminalTokenAuthenticationHandler>("TerminalToken", "Terminal Token");
     options.AddScheme<AdminTokenAuthenticationHandler>("AdminToken", "Admin Token");
 })
-.AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
-{
-    options.RequireHttpsMetadata = false;
-    options.SaveToken = true;
-    options.TokenValidationParameters = new TokenValidationParameters
-    {
-        ValidateIssuerSigningKey = true,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("your-secret-key")),
-        ValidateIssuer = false,
-        ValidateAudience = false
-    };
-});
+.AddIdentityCookies()
+// .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
+// {
+//     options.RequireHttpsMetadata = false;
+//     options.SaveToken = true;
+//     options.TokenValidationParameters = new TokenValidationParameters
+//     {
+//         ValidateIssuerSigningKey = true,
+//         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("your-secret-key")),
+//         ValidateIssuer = false,
+//         ValidateAudience = false
+//     };
+// })
+;
 
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("TerminalPolicy", policy =>
         policy.RequireAuthenticatedUser().AddAuthenticationSchemes("TerminalToken"));
+    options.AddPolicy("AdminPolicy", policy =>
+        policy.RequireAuthenticatedUser()
+            .AddAuthenticationSchemes(
+                IdentityConstants.ApplicationScheme,
+                "AdminToken"
+            ).RequireRole("Admin"));
+    options.AddPolicy("UserPolicy", policy =>
+        policy.RequireAuthenticatedUser()
+        .AddAuthenticationSchemes(
+            IdentityConstants.ApplicationScheme
+        ));
 });
 
 
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-// if (app.Environment.IsDevelopment())
-// {
-    app.UseSwagger();
-    app.UseSwaggerUI();
-// }
-
+app.UseStaticFiles();
 app.UseHttpsRedirection();
 app.UseRouting();
-app.UseAuthorization();
 app.UseAuthentication();
+app.UseAuthorization();
+//app.UseMvc();
 app.MapIdentityApi<CCUser>().WithOpenApi();
-app.MapSwagger().RequireAuthorization("Admin");
+// Configure the HTTP request pipeline.
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+    app.UseHsts();
+}
+app.MapSwagger()/*.RequireAuthorization("AdminPolicy")*/;
 app.MapControllers();
 app.MapRazorPages();
 // app.MapAreaControllerRoute("User", "User", "User/{controller=Api}/{action}").RequireAuthorization();

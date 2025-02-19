@@ -11,15 +11,15 @@ namespace CityCard_API.Controllers;
 
 [ApiController]
 [Route("api/user")]
-[Authorize(AuthenticationSchemes = CookieAuthenticationDefaults.AuthenticationScheme)]
+[Authorize(Policy = "UserPolicy")]
 public class UserController : ControllerBase
 {
     const int  accountTypeId = 1;
     private readonly CityCardDBContext _dbContext;
     private readonly UserManager<CCUser> _userManager;
-    public UserController(CityCardDBContext dBContext, UserManager<CCUser> _userManager){
+    public UserController(CityCardDBContext dBContext, UserManager<CCUser> userManager){
         _dbContext = dBContext;
-        _userManager = _userManager;
+        _userManager = userManager;
     }
     
     [HttpGet("new-account")]
@@ -45,30 +45,34 @@ public class UserController : ControllerBase
     }
 
     [HttpGet("ammount")]
-    public async Task<ActionResult<float>> GetAccountAmmount(){
+    public async Task<ActionResult<float>> GetAccountAmmount(string accountId){
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (userId == null)
                 return Unauthorized();
 
-        var account = await _dbContext.Accounts
-                            .Where(a => a.User.Id == userId)
-                            .FirstOrDefaultAsync();
+        var account = await _dbContext.Accounts.Include(a=>a.User).Where(a=>a.Id == Guid.Parse(accountId)).FirstAsync();
 
         if (account == null)
             return NotFound("No account found.");
+        if (account.User.Id != userId)
+            return Forbid("It is not yours account");
 
         return Ok(account.Amount);
     }
 
     [HttpGet("transactions")]
-    public async Task<ActionResult<List<AccountTransaction>>> GetAccountTransactions()
+    public async Task<ActionResult<List<AccountTransaction>>> GetAccountTransactions(string accountId)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (userId == null)
                 return Unauthorized();
-
+        bool accountExists = await _dbContext.Accounts
+            .AnyAsync(a => a.Id == Guid.Parse(accountId) && a.User.Id == userId);
+        if(!accountExists)
+            return BadRequest("Account not exists or it is not yours");
         var transactions = await _dbContext.Transactions
-                            .Where(t => t.Account.User.Id == userId)
+                            .Where(t => t.Account.Id == Guid.Parse(accountId))
+                            .OrderBy(t=>t.Timestamp)
                             .ToListAsync();
 
         return Ok(transactions);

@@ -10,7 +10,7 @@ namespace CityCard_API.Controllers;
 
 [ApiController]
 [Route("api/admin")]
-[Authorize(Policy = "AdminToken")]
+[Authorize(Policy = "AdminPolicy")]
 public class AdminAPIController : ControllerBase
 {
     private readonly CityCardDBContext _dbContext;

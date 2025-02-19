@@ -4,9 +4,9 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace CityCard_API.Models.DB;
-public class CityCardDBContext : IdentityDbContext
+public class CityCardDBContext : IdentityDbContext<CCUser>
 {
-    public DbSet<CCUser> CCUsers { get; set; }
+    //public DbSet<CCUser> CCUsers { get; set; }
     public DbSet<AccountType> AccountTypes { get; set; }
     public DbSet<TransportType> TransportTypes { get; set; }
     public DbSet<City> Cities{ get; set; }
