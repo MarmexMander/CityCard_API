@@ -1,31 +1,30 @@
 using System.Security.Claims;
 using System.Transactions;
 using CityCard_API.Models.DB;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace CityCard_API.Controllers;
 
 [ApiController]
-[Route("api/{action}")]
-[Authorize]
-class UserAPIController : ControllerBase
+[Route("api/user")]
+[Authorize(AuthenticationSchemes = CookieAuthenticationDefaults.AuthenticationScheme)]
+public class UserController : ControllerBase
 {
     const int  accountTypeId = 1;
     private readonly CityCardDBContext _dbContext;
-    public UserAPIController(CityCardDBContext dBContext){
+    private readonly UserManager<CCUser> _userManager;
+    public UserController(CityCardDBContext dBContext, UserManager<CCUser> _userManager){
         _dbContext = dBContext;
+        _userManager = _userManager;
     }
     
-    [HttpGet]
+    [HttpGet("new-account")]
     public async Task<IActionResult> NewAccount(){
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (userId == null)
-                return Unauthorized();
-        var user = await _dbContext.CCUsers.Include(u => u.Accounts)
-        .FirstOrDefaultAsync(u => u.Id == userId);
-
+        var user = await _userManager.GetUserAsync(User);
         if (user == null)
             return NotFound("User not found.");
 
@@ -45,7 +44,7 @@ class UserAPIController : ControllerBase
         return Ok(new { Message = "Account created successfully", AccountId = newAccount.Id });
     }
 
-    [HttpGet]
+    [HttpGet("ammount")]
     public async Task<ActionResult<float>> GetAccountAmmount(){
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (userId == null)
@@ -61,7 +60,7 @@ class UserAPIController : ControllerBase
         return Ok(account.Amount);
     }
 
-    [HttpGet]
+    [HttpGet("transactions")]
     public async Task<ActionResult<List<AccountTransaction>>> GetAccountTransactions()
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);

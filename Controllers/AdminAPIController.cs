@@ -9,9 +9,9 @@ using Microsoft.EntityFrameworkCore;
 namespace CityCard_API.Controllers;
 
 [ApiController]
-[Route("api/admin/{action}")]
+[Route("api/admin")]
 [Authorize(Policy = "AdminToken")]
-class AdminAPIController : ControllerBase
+public class AdminAPIController : ControllerBase
 {
     private readonly CityCardDBContext _dbContext;
     private readonly UserManager<CCUser> _userManager;
@@ -20,7 +20,7 @@ class AdminAPIController : ControllerBase
         _userManager = userManager;
     }
 
-    [HttpPost]
+    [HttpGet("token")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> GetToken(){
         var user = await _userManager.GetUserAsync(User);
@@ -38,8 +38,8 @@ class AdminAPIController : ControllerBase
         return Ok(token);
     }
 
-    [HttpPost]
-    public async Task<IActionResult> AddCity([FromBody] string city, [FromBody] string region)
+    [HttpPost("add-city")]
+    public async Task<IActionResult> AddCity(string city, string region)
     {
         if (string.IsNullOrWhiteSpace(city))
             return BadRequest("City name cannot be empty");
@@ -50,8 +50,8 @@ class AdminAPIController : ControllerBase
         return Ok(newCity);
     }
 
-    [HttpPost]
-    public async Task<IActionResult> AddAccountType([FromBody] string accountType)
+    [HttpPost("add-account-type")]
+    public async Task<IActionResult> AddAccountType(string accountType)
     {
         if (string.IsNullOrWhiteSpace(accountType))
             return BadRequest("Account type name cannot be empty");
@@ -62,8 +62,8 @@ class AdminAPIController : ControllerBase
         return Ok(newAccountType);
     }
 
-    [HttpPost]
-    public async Task<IActionResult> AddTransportType([FromBody] string transportType)
+    [HttpPost("add-transport-type")]
+    public async Task<IActionResult> AddTransportType(string transportType)
     {
         if (string.IsNullOrWhiteSpace(transportType))
             return BadRequest("Transport type name cannot be empty");
@@ -74,8 +74,8 @@ class AdminAPIController : ControllerBase
         return Ok(newTransportType);
     }
 
-  [HttpPost]
-    public async Task<IActionResult> AddTicketType([FromBody] TicketTypeDTO ticketDto)
+  [HttpPost("add-ticket-type")]
+    public async Task<IActionResult> AddTicketType(TicketTypeDTO ticketDto)
     {
         var city = await _dbContext.Cities.FirstOrDefaultAsync(c => c.CityName == ticketDto.CityName && c.Region == ticketDto.CityRegion);
         if (city == null)
@@ -98,8 +98,8 @@ class AdminAPIController : ControllerBase
         return Ok(newPrice);
     }
 
-    [HttpPost]
-    public async Task<IActionResult> AddTransport([FromBody] TransportDTO transportDto)
+    [HttpPost("add-transport")]
+    public async Task<IActionResult> AddTransport(TransportDTO transportDto)
     {
         //TODO: get region in search scope
         var city = await _dbContext.Cities.FirstOrDefaultAsync(c => c.CityName == transportDto.City);
@@ -122,8 +122,8 @@ class AdminAPIController : ControllerBase
         return Ok(newTransport);
     }
 
-    [HttpPost]
-    public async Task<IActionResult> AddTerminal([FromBody] TerminalDTO terminalDto)
+    [HttpPost("add-terminal")]
+    public async Task<IActionResult> AddTerminal(TerminalDTO terminalDto)
     {
         var transport = await _dbContext.Transports.Include(t => t.Terminals)
             .FirstOrDefaultAsync(t => t.LicensePlate == terminalDto.LicensePlate);
@@ -144,7 +144,7 @@ class AdminAPIController : ControllerBase
         return Ok(newTerminal);
     }
 
-    [HttpPost]
+    [HttpPost("new-terminal-token")]
     public async Task<IActionResult> GenerateTerminalToken(Guid terminalId)
     {
         var terminal = await _dbContext.Terminals.FindAsync(terminalId);

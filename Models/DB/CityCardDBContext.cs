@@ -74,7 +74,7 @@ public class CityCardDBContext : IdentityDbContext
         };
         builder.Entity<CCRole>().HasData(roles);
         var hasher = new PasswordHasher<IdentityUser>();
-        var adminUser = new IdentityUser(){
+        var adminUser = new CCUser(){
             Id = "d1cdc3fb-4bc1-434d-85a6-e366a0cb7664",
             SecurityStamp = "d1cdc3fb-4bc1-434d-85a6-e366a0cb7664",
             ConcurrencyStamp = "d1cdc3fb-4bc1-434d-85a6-e366a0cb7664",

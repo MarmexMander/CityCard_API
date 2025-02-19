@@ -3,6 +3,7 @@ using System;
 using CityCard_API.Models.DB;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace CityCard_API.Migrations
 {
     [DbContext(typeof(CityCardDBContext))]
-    partial class CityCardDBContextModelSnapshot : ModelSnapshot
+    [Migration("20250213115649_IdentityTypesFix")]
+    partial class IdentityTypesFix
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -46,7 +49,7 @@ namespace CityCard_API.Migrations
 
                     b.HasIndex("AdminId");
 
-                    b.ToTable("AdminTokens", (string)null);
+                    b.ToTable("AdminTokens");
                 });
 
             modelBuilder.Entity("City", b =>
@@ -67,7 +70,7 @@ namespace CityCard_API.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Cities", (string)null);
+                    b.ToTable("Cities");
 
                     b.HasData(
                         new
@@ -113,7 +116,7 @@ namespace CityCard_API.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Accounts", (string)null);
+                    b.ToTable("Accounts");
                 });
 
             modelBuilder.Entity("CityCard_API.Models.DB.AccountTransaction", b =>
@@ -135,7 +138,7 @@ namespace CityCard_API.Migrations
 
                     b.HasIndex("AccountId");
 
-                    b.ToTable("Transactions", (string)null);
+                    b.ToTable("Transactions");
                 });
 
             modelBuilder.Entity("CityCard_API.Models.DB.AccountType", b =>
@@ -152,7 +155,7 @@ namespace CityCard_API.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("AccountTypes", (string)null);
+                    b.ToTable("AccountTypes");
 
                     b.HasData(
                         new
@@ -215,7 +218,7 @@ namespace CityCard_API.Migrations
 
                     b.HasIndex("TransportTypeId");
 
-                    b.ToTable("Prices", (string)null);
+                    b.ToTable("Prices");
                 });
 
             modelBuilder.Entity("CityCard_API.Models.DB.Terminal", b =>
@@ -239,7 +242,7 @@ namespace CityCard_API.Migrations
 
                     b.HasIndex("TransportLicensePlate");
 
-                    b.ToTable("Terminals", (string)null);
+                    b.ToTable("Terminals");
                 });
 
             modelBuilder.Entity("CityCard_API.Models.DB.TransactionMetadata", b =>
@@ -259,7 +262,7 @@ namespace CityCard_API.Migrations
 
                     b.HasIndex("TerminalId");
 
-                    b.ToTable("TransactionMetadata", (string)null);
+                    b.ToTable("TransactionMetadata");
                 });
 
             modelBuilder.Entity("CityCard_API.Models.DB.Transport", b =>
@@ -279,7 +282,7 @@ namespace CityCard_API.Migrations
 
                     b.HasIndex("TypeId");
 
-                    b.ToTable("Transports", (string)null);
+                    b.ToTable("Transports");
                 });
 
             modelBuilder.Entity("CityCard_API.Models.DB.TransportType", b =>
@@ -296,7 +299,7 @@ namespace CityCard_API.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("TransportTypes", (string)null);
+                    b.ToTable("TransportTypes");
 
                     b.HasData(
                         new
@@ -554,7 +557,7 @@ namespace CityCard_API.Migrations
 
                     b.HasIndex("TerminalId");
 
-                    b.ToTable("TerminalTokens", (string)null);
+                    b.ToTable("TerminalTokens");
                 });
 
             modelBuilder.Entity("CCRole", b =>

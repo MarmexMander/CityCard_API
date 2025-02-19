@@ -7,9 +7,9 @@ using Swashbuckle.AspNetCore.Annotations;
 namespace CityCard_API.Controllers;
 
 [ApiController]
-[Route("api/terminal/{action}")]
+[Route("api/terminal")]
 [Authorize(Policy = "TerminalPolicy")]
-class TerminalAPIController : ControllerBase
+public class TerminalAPIController : ControllerBase
 {
     private readonly CityCardDBContext _dbContext;
 
@@ -23,7 +23,7 @@ class TerminalAPIController : ControllerBase
     /// <param name="account">The account ID.</param>
     /// <param name="amount">The amount to top up.</param>
     /// <returns>True if the top-up was successful.</returns>
-    [HttpPost(Name = "top-up")]
+    [HttpPost("top-up")]
     [SwaggerOperation(Summary = "Top up a user's account", Description = "Increases the account balance by the specified amount.")]
     public async Task<ActionResult<bool>> MakeTransactionTopUp([FromQuery]Guid account, [FromQuery]float amount){
         var accountEntity = await _dbContext.Accounts.FindAsync(account);
@@ -65,7 +65,7 @@ class TerminalAPIController : ControllerBase
     /// </summary>
     /// <param name="account">The account ID.</param>
     /// <returns>True if the withdrawal was successful.</returns>
-    [HttpPost(Name = "withdraw")]
+    [HttpPost("withdraw")]
     [SwaggerOperation(Summary = "Withdraw from an account (ticket purchase)", Description = "Charges the ticket price based on the account type and transport type.")]
     public async Task<ActionResult<bool>> MakeTransactionWithdraw([FromQuery]Guid account){
         var accountEntity = await _dbContext.Accounts
