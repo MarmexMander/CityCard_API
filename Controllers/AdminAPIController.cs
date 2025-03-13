@@ -1,4 +1,6 @@
 using System.ComponentModel.DataAnnotations;
+using System.Runtime.InteropServices;
+using System.Runtime.Serialization;
 using CityCard_API.Models.DB;
 using CityCard_API.Security;
 using Microsoft.AspNetCore.Authorization;
@@ -21,10 +23,9 @@ public class AdminAPIController : ControllerBase
     }
 
     [HttpGet("token")]
-    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> GetToken(){
         var user = await _userManager.GetUserAsync(User);
-        var adminToken = await _dbContext.AdminTokens.Where(at => at.AdminId == user.Id).FirstAsync();
+        var adminToken = await _dbContext.AdminTokens.Where(at => at.AdminId == user.Id).FirstOrDefaultAsync();
         if(adminToken != null)
             return Conflict("You already have a token");
         var token = Tools.GenerateToken();
@@ -35,6 +36,7 @@ public class AdminAPIController : ControllerBase
             ExpiresAt = DateTime.UtcNow+new TimeSpan(30,0,0,0)
         };
         await _dbContext.AdminTokens.AddAsync(adminToken);
+        await _dbContext.SaveChangesAsync();
         return Ok(token);
     }
 
@@ -106,7 +108,9 @@ public class AdminAPIController : ControllerBase
         if (city == null)
             return BadRequest("Invalid city");
 
-        var transportType = (TransportType)Enum.Parse(typeof(TransportTypeEnum), transportDto.Type, true);
+        var transportType = await _dbContext.TransportTypes.FirstOrDefaultAsync(t=>t.Name == transportDto.Type);
+        if(transportType == null)
+            return BadRequest("Transport type not found");
 
         var newTransport = new Transport
         {
@@ -125,29 +129,32 @@ public class AdminAPIController : ControllerBase
     [HttpPost("add-terminal")]
     public async Task<IActionResult> AddTerminal(TerminalDTO terminalDto)
     {
-        var transport = await _dbContext.Transports.Include(t => t.Terminals)
-            .FirstOrDefaultAsync(t => t.LicensePlate == terminalDto.LicensePlate);
-
-        if (transport == null)
-            return BadRequest("Transport not found");
-
         var newTerminal = new Terminal
         {
             Id = Guid.NewGuid(),
             LocationAddress = terminalDto.LocationAddress,
-            LocationTransport = transport
         };
 
-        transport.Terminals.Add(newTerminal);
+        if(terminalDto.LicensePlate != null)
+        {
+            var transport = await _dbContext.Transports.Include(t => t.Terminals)
+            .FirstOrDefaultAsync(t => t.LicensePlate == terminalDto.LicensePlate);
+            if (transport == null)
+                return BadRequest("Transport not found");
+            newTerminal.LocationTransport = transport;
+            //transport.Terminals.Add(newTerminal);
+        }
+
+        await _dbContext.Terminals.AddAsync(newTerminal);
         await _dbContext.SaveChangesAsync();
 
         return Ok(newTerminal);
     }
 
     [HttpPost("new-terminal-token")]
-    public async Task<IActionResult> GenerateTerminalToken(Guid terminalId)
+    public async Task<IActionResult> GenerateTerminalToken([FromBody]string terminalId)
     {
-        var terminal = await _dbContext.Terminals.FindAsync(terminalId);
+        var terminal = await _dbContext.Terminals.FindAsync(Guid.Parse(terminalId));
         if (terminal == null)
             return NotFound("Terminal not found");
 
@@ -166,12 +173,6 @@ public class AdminAPIController : ControllerBase
 
         return Ok(new { token = rawToken, validUntil = newToken.ValidUntil });
     }
-    private string ComputeHash(string token)
-    {
-        using var sha256 = System.Security.Cryptography.SHA256.Create();
-        var hashed = sha256.ComputeHash(System.Text.Encoding.UTF8.GetBytes(token));
-        return Convert.ToBase64String(hashed);
-    }
 
     // DTOs for requests
     public class TransportDTO
@@ -188,11 +189,9 @@ public class AdminAPIController : ControllerBase
 
     public class TerminalDTO
     {
-        [Required] 
-        public string LicensePlate { get; set; }
+        public string? LicensePlate { get; set; } = null;
         
-        [Required] 
-        public string LocationAddress { get; set; }
+        public string? LocationAddress { get; set; } = null;
     }
 
 

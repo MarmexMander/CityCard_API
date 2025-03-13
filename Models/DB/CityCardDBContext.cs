@@ -57,41 +57,24 @@ public class CityCardDBContext : IdentityDbContext<CCUser>
         builder.Entity<TransportType>().SeedEnumValues<TransportType, TransportTypeEnum>(x => x);
 
         //Seeding
-        var adminRole = new CCRole(){
+        var adminRole = new IdentityRole(){
             Id = "87d24e3b-489d-e621-9123-c808f97722b9",
             Name = "Admin",
+            NormalizedName = "ADMIN",
             ConcurrencyStamp = "87d24e3b-489d-e621-9123-c808f97722b9"
         };
-        var userRole = new CCRole(){
+        var userRole = new IdentityRole(){
             Id = "b35d45df-1693-464c-9086-17c11d02de05",
             Name = "User",
+            NormalizedName = "USER",
             ConcurrencyStamp = "b35d45df-1693-464c-9086-17c11d02de05"
         };
 
-        var roles = new List<CCRole>(){
+        var roles = new List<IdentityRole>(){
             adminRole, 
             userRole
         };
-        builder.Entity<CCRole>().HasData(roles);
-        var hasher = new PasswordHasher<IdentityUser>();
-        var adminUser = new CCUser(){
-            Id = "d1cdc3fb-4bc1-434d-85a6-e366a0cb7664",
-            SecurityStamp = "d1cdc3fb-4bc1-434d-85a6-e366a0cb7664",
-            ConcurrencyStamp = "d1cdc3fb-4bc1-434d-85a6-e366a0cb7664",
-            UserName = "admin",
-            Email = "admin@citycard.ua",
-            EmailConfirmed = true,
-        };
-        adminUser.PasswordHash = "AQAAAAIAAYagAAAAEIlZJu/0K1lq+uZqp2F0JMTkhm2GJV8YCgUUTyOQzA4LFarHrgIbSd6m+WA0HuffEQ==";
-        builder.Entity<CCUser>().HasData(adminUser);
-
-        builder.Entity<IdentityUserRole<string>>()
-        .HasData(
-            new IdentityUserRole<string>{
-                UserId = adminUser.Id,
-                RoleId = adminRole.Id
-            }
-        );
+        builder.Entity<IdentityRole>().HasData(roles);
 
         builder.Entity<City>().HasData(
             new City{

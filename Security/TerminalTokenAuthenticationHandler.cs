@@ -1,25 +1,25 @@
-using Microsoft.AspNetCore.Authentication;
-using CityCard_API.Models.DB;
-using Microsoft.Extensions.Options;
-using System.Text.Encodings.Web;
 using System.Security.Claims;
-using System.Data.Entity;
+using System.Text.Encodings.Web;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using CityCard_API.Models.DB;
 
 namespace CityCard_API.Security;
 
 public class TerminalTokenAuthenticationHandler : AuthenticationHandler<AuthenticationSchemeOptions>
 {
-    private readonly CityCardDBContext _dbContext;
+    private readonly IServiceScopeFactory _serviceScopeFactory;
 
     public TerminalTokenAuthenticationHandler(
         IOptionsMonitor<AuthenticationSchemeOptions> options,
         ILoggerFactory logger,
         UrlEncoder encoder,
         ISystemClock clock,
-        CityCardDBContext dbContext)
+        IServiceScopeFactory serviceScopeFactory)
         : base(options, logger, encoder, clock)
     {
-        _dbContext = dbContext;
+        _serviceScopeFactory = serviceScopeFactory;
     }
 
     protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
@@ -35,9 +35,12 @@ public class TerminalTokenAuthenticationHandler : AuthenticationHandler<Authenti
 
         // Validate the token
         var tokenHash = Tools.ComputeHash(token); // Hashing logic here
-        var terminalToken = await _dbContext.TerminalTokens
+        using var scope = _serviceScopeFactory.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<CityCardDBContext>();
+        var terminalId = Guid.Parse(TerminalId);
+        var terminalToken = await dbContext.TerminalTokens
         .Where(t =>
-             t.Terminal.Id.ToString() == TerminalId 
+             t.TerminalId == terminalId
              && t.TokenHash == tokenHash 
              && t.ValidUntil > DateTime.UtcNow)
         .FirstAsync();
@@ -50,7 +53,7 @@ public class TerminalTokenAuthenticationHandler : AuthenticationHandler<Authenti
         // Create claims
         var claims = new[]
         {
-            new Claim(type: ClaimTypes.NameIdentifier, terminalToken.Terminal.Id.ToString())
+            new Claim(type: ClaimTypes.NameIdentifier, terminalToken.TerminalId.ToString())
         };
 
         var identity = new ClaimsIdentity(claims, nameof(TerminalTokenAuthenticationHandler));

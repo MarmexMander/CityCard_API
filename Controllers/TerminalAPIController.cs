@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using CityCard_API.Models.DB;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -32,8 +33,7 @@ public class TerminalAPIController : ControllerBase
 
         if (amount <= 0)
             return BadRequest("Invalid amount.");
-
-        var terminalId = User.Claims.FirstOrDefault(c => c.Type == "TerminalId")?.Value;
+        var terminalId = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
         if (terminalId == null)
             return Unauthorized("Terminal authentication required.");
 

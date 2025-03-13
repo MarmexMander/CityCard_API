@@ -3,6 +3,7 @@ using System;
 using CityCard_API.Models.DB;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace CityCard_API.Migrations
 {
     [DbContext(typeof(CityCardDBContext))]
-    partial class CityCardDBContextModelSnapshot : ModelSnapshot
+    [Migration("20250219164359_AddedNormalizedRoleName")]
+    partial class AddedNormalizedRoleName
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -111,6 +114,22 @@ namespace CityCard_API.Migrations
                         .HasDatabaseName("UserNameIndex");
 
                     b.ToTable("AspNetUsers", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = "d1cdc3fb-4bc1-434d-85a6-e366a0cb7664",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "d1cdc3fb-4bc1-434d-85a6-e366a0cb7664",
+                            Email = "admin@citycard.ua",
+                            EmailConfirmed = true,
+                            LockoutEnabled = false,
+                            PasswordHash = "AQAAAAIAAYagAAAAEIlZJu/0K1lq+uZqp2F0JMTkhm2GJV8YCgUUTyOQzA4LFarHrgIbSd6m+WA0HuffEQ==",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "d1cdc3fb-4bc1-434d-85a6-e366a0cb7664",
+                            TwoFactorEnabled = false,
+                            UserName = "admin"
+                        });
                 });
 
             modelBuilder.Entity("City", b =>
@@ -502,6 +521,13 @@ namespace CityCard_API.Migrations
                     b.HasIndex("RoleId");
 
                     b.ToTable("AspNetUserRoles", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            UserId = "d1cdc3fb-4bc1-434d-85a6-e366a0cb7664",
+                            RoleId = "87d24e3b-489d-e621-9123-c808f97722b9"
+                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>

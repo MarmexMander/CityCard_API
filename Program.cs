@@ -9,6 +9,8 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.OpenApi.Models;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using System.Security.Claims;
+using CityCard_API.Models.DB.Seeders;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -46,12 +48,16 @@ builder.Services
             options.Password.RequireNonAlphanumeric = false;
             options.Password.RequiredLength = 5;
         })
+    .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<CityCardDBContext>()
     .AddApiEndpoints()
     .AddSignInManager()
     .AddDefaultTokenProviders()
     .AddDefaultUI();
-
+builder.Services.Configure<IdentityOptions>(options =>
+{
+    options.ClaimsIdentity.RoleClaimType = ClaimTypes.Role;
+});
 // builder.Services
 //     .AddDefaultIdentity<CCUser>(options =>
 //     {
@@ -65,7 +71,7 @@ builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = IdentityConstants.ApplicationScheme;
     options.DefaultSignInScheme = IdentityConstants.ApplicationScheme;
-    
+    options.DefaultChallengeScheme = IdentityConstants.ApplicationScheme;
     options.AddScheme<TerminalTokenAuthenticationHandler>("TerminalToken", "Terminal Token");
     options.AddScheme<AdminTokenAuthenticationHandler>("AdminToken", "Admin Token");
 })
@@ -104,7 +110,11 @@ builder.Services.AddAuthorization(options =>
 
 
 var app = builder.Build();
-
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    await UserSeeder.SeedAdminUserAsync(services);
+}
 app.UseStaticFiles();
 app.UseHttpsRedirection();
 app.UseRouting();
